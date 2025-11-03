@@ -1,0 +1,20 @@
+package.json
+playwright.config.ts
+tests/
+├── example.spec.ts
+├── advanced-tests.spec.ts
+├── fixtures/
+│   └── test-data.json
+├── page-objects/
+│   ├── base.page.ts
+│   ├── product.page.ts
+│   ├── cart.page.ts
+│   └── checkout.page.ts
+└── utils/
+├── api-helpers.ts
+└── test-helpers.ts
+
+test-results/
+├── results.html
+├── results.json
+└── results.xml
