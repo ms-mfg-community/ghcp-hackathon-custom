@@ -68,7 +68,7 @@ The solution will serve as both a functional calculator and a reference implemen
 
 | Requirement ID | Description |
 |---|---|
-| FR-1 | The application shall prompt users for two numeric operands and one operator |
+| FR-1 | The application shall prompt users in sequence: first operand, second operand, then operator |
 | FR-2 | The application shall support addition (+) operations between two numbers |
 | FR-3 | The application shall support subtraction (-) operations between two numbers |
 | FR-4 | The application shall support multiplication (*) operations between two numbers |
@@ -155,7 +155,9 @@ The solution will serve as both a functional calculator and a reference implemen
 ### 1.12.2 Calculator Implementation
 
 1. Implement the calculator in `Calculator.cs` using top-level statements:
-   - Prompt for first operand, second operand, and operator
+   - Prompt for first operand
+   - Prompt for second operand
+   - Prompt for operator
    - Perform the appropriate arithmetic operation
    - Display the result
    - Ask if the user wants to perform another calculation
