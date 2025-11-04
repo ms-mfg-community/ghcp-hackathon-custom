@@ -423,6 +423,395 @@ pip list --outdated              # Check for updates
 
 - For Java apps, use maven for build automation, dependency management, project structure standardization, plugins and extensibility and project information management unless otherwise specified in prompts.
 
+### Docker
+
+Docker is the preferred containerization platform for packaging, deploying, and running applications in isolated environments. Follow these best practices for Dockerfile creation, image optimization, and container management.
+
+#### Dockerfile Best Practices
+
+**1. Base Image Selection:**
+
+- Use official images from Docker Hub or verified publishers
+- Prefer specific version tags over `latest` for reproducibility
+- Use minimal base images (Alpine, Distroless) for production when possible
+- For development, use full-featured images for better debugging
+
+```dockerfile
+# Good - specific version, minimal image
+FROM node:18-alpine
+
+# Avoid - latest tag is not reproducible
+FROM node:latest
+```
+
+**2. Multi-Stage Builds:**
+
+- Use multi-stage builds to reduce final image size
+- Separate build dependencies from runtime dependencies
+- Copy only necessary artifacts to final stage
+
+```dockerfile
+# Build stage
+FROM node:18-alpine AS builder
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci --only=production
+
+# Production stage
+FROM node:18-alpine
+WORKDIR /app
+COPY --from=builder /app/node_modules ./node_modules
+COPY . .
+EXPOSE 3000
+CMD ["node", "server.js"]
+```
+
+**3. Layer Optimization:**
+
+- Order instructions from least to most frequently changing
+- Combine RUN commands to reduce layers
+- Clean up package manager caches in the same layer
+
+```dockerfile
+# Good - efficient layering
+FROM python:3.11-slim
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+COPY . .
+
+# Avoid - creates unnecessary layers
+FROM python:3.11-slim
+RUN apt-get update
+RUN apt-get install -y package1
+RUN apt-get install -y package2
+```
+
+**4. Security Best Practices:**
+
+- Never run containers as root
+- Create and use non-root user
+- Don't store secrets in Dockerfile or images
+- Use `.dockerignore` to exclude sensitive files
+- Scan images for vulnerabilities regularly
+
+```dockerfile
+# Create non-root user
+FROM node:18-alpine
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S nodejs -u 1001
+WORKDIR /app
+COPY --chown=nodejs:nodejs . .
+USER nodejs
+EXPOSE 3000
+CMD ["node", "server.js"]
+```
+
+**5. .dockerignore File:**
+
+Always include a `.dockerignore` file to exclude unnecessary files from the build context:
+
+```gitignore
+# Version control
+.git
+.gitignore
+
+# Dependencies
+node_modules
+venv
+__pycache__
+
+# Build artifacts
+dist
+build
+*.log
+
+# IDE
+.vscode
+.idea
+
+# Environment files
+.env
+.env.local
+
+# Documentation
+*.md
+README*
+
+# Tests
+tests
+*.test.js
+```
+
+#### Container Best Practices
+
+**1. Environment Variables:**
+
+- Use environment variables for configuration
+- Never hardcode secrets
+- Use `.env` files for local development
+- Use secret management tools for production (Docker Secrets, Azure Key Vault)
+
+```dockerfile
+# Use ARG for build-time variables
+ARG NODE_ENV=production
+ENV NODE_ENV=$NODE_ENV
+
+# Use ENV for runtime variables
+ENV PORT=3000
+ENV LOG_LEVEL=info
+```
+
+**2. Health Checks:**
+
+- Always include HEALTHCHECK instruction
+- Define appropriate intervals and timeouts
+- Use lightweight health check endpoints
+
+```dockerfile
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD wget --no-verbose --tries=1 --spider http://localhost:3000/health || exit 1
+```
+
+**3. Resource Limits:**
+
+- Set memory and CPU limits
+- Use in docker-compose or orchestration platforms
+
+```yaml
+# docker-compose.yml
+services:
+  app:
+    image: myapp:latest
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+```
+
+**4. Volume Management:**
+
+- Use named volumes for persistent data
+- Use bind mounts for development only
+- Never store data in the container layer
+
+```yaml
+# docker-compose.yml
+services:
+  app:
+    volumes:
+      - app-data:/app/data      # Named volume for persistence
+      - ./src:/app/src          # Bind mount for development
+volumes:
+  app-data:
+```
+
+#### Docker Compose Best Practices
+
+**1. Service Definition:**
+
+```yaml
+version: '3.8'
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    image: myapp:${VERSION:-latest}
+    container_name: myapp-web
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://db:5432/mydb
+    env_file:
+      - .env
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+
+  db:
+    image: postgres:15-alpine
+    container_name: myapp-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: mydb
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  postgres-data:
+```
+
+**2. Environment-Specific Overrides:**
+
+```yaml
+# docker-compose.override.yml (for development)
+version: '3.8'
+
+services:
+  web:
+    build:
+      target: development
+    volumes:
+      - ./src:/app/src
+    environment:
+      - NODE_ENV=development
+      - DEBUG=true
+    ports:
+      - "3000:3000"
+      - "9229:9229"  # Debug port
+```
+
+#### Common Docker Commands
+
+```bash
+# Build image
+docker build -t myapp:latest .
+docker build --target production -t myapp:prod .
+
+# Run container
+docker run -d -p 3000:3000 --name myapp myapp:latest
+docker run -it --rm myapp:latest sh  # Interactive shell
+
+# Container management
+docker ps                    # List running containers
+docker ps -a                # List all containers
+docker stop myapp           # Stop container
+docker start myapp          # Start container
+docker restart myapp        # Restart container
+docker rm myapp             # Remove container
+docker logs myapp           # View logs
+docker logs -f myapp        # Follow logs
+docker exec -it myapp sh    # Execute shell in running container
+
+# Image management
+docker images               # List images
+docker rmi myapp:latest    # Remove image
+docker image prune -a      # Remove unused images
+docker system prune -a     # Clean up everything
+
+# Docker Compose
+docker-compose up -d        # Start services in background
+docker-compose down         # Stop and remove services
+docker-compose ps           # List services
+docker-compose logs -f      # Follow logs
+docker-compose exec web sh  # Execute command in service
+docker-compose build        # Build services
+```
+
+#### Image Optimization Tips
+
+1. **Minimize layer count**: Combine related RUN commands
+2. **Use .dockerignore**: Reduce build context size
+3. **Multi-stage builds**: Separate build and runtime dependencies
+4. **Clean package caches**: Remove in same RUN command
+
+   ```dockerfile
+   RUN apt-get update && \
+       apt-get install -y package1 package2 && \
+       rm -rf /var/lib/apt/lists/*
+   ```
+
+5. **Use COPY instead of ADD**: Unless you need tar extraction
+6. **Leverage build cache**: Place frequently changing instructions last
+7. **Use specific COPY**: Copy only what's needed
+
+   ```dockerfile
+   COPY package*.json ./
+   RUN npm install
+   COPY . .
+   ```
+
+#### Security Scanning
+
+```bash
+# Scan image for vulnerabilities
+docker scan myapp:latest
+
+# Use third-party tools
+trivy image myapp:latest
+snyk container test myapp:latest
+```
+
+#### CI/CD Integration
+
+**GitHub Actions Example:**
+
+```yaml
+name: Build and Push Docker Image
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+      
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+      
+      - name: Build and push
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          push: true
+          tags: myapp:latest,myapp:${{ github.sha }}
+          cache-from: type=registry,ref=myapp:buildcache
+          cache-to: type=registry,ref=myapp:buildcache,mode=max
+```
+
+#### Troubleshooting
+
+- **Container exits immediately**: Check logs with `docker logs <container>`
+- **Port already in use**: Use different host port or stop conflicting service
+- **Permission denied**: Ensure user has docker group membership
+- **Build cache issues**: Use `docker build --no-cache`
+- **Volume permissions**: Match user IDs between host and container
+
+#### References
+
+- [Docker Documentation](https://docs.docker.com/)
+- [Dockerfile Best Practices](https://docs.docker.com/develop/develop-images/dockerfile_best-practices/)
+- [Docker Security Best Practices](https://cheatsheetseries.owasp.org/cheatsheets/Docker_Security_Cheat_Sheet.html)
+
 ### C++
 
 - Use the recommended project directory structure
