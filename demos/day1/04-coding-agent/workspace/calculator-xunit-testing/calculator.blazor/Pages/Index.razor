@@ -1,0 +1,85 @@
+@page "/"
+
+<PageTitle>Home</PageTitle>
+
+<h1>Welcome to .NET Blazor Calculator</h1>
+
+<p class="lead">
+    This is a demonstration of a Blazor Server web application that provides a calculator interface.
+</p>
+
+<div class="alert alert-info mt-4">
+    <h4>Features:</h4>
+    <ul>
+        <li>Six arithmetic operations: Add, Subtract, Multiply, Divide, Modulo, and Exponent</li>
+        <li>Keyboard shortcuts for improved user experience</li>
+        <li>Input validation and error handling</li>
+        <li>Responsive design with Bootstrap</li>
+    </ul>
+</div>
+
+<div class="mt-4">
+    <a href="/calculator" class="btn btn-primary btn-lg">
+        <span class="bi bi-calculator-fill"></span> Open Calculator
+    </a>
+</div>
+
+<div class="mt-5">
+    <h3>Keyboard Shortcuts:</h3>
+    <table class="table table-bordered" style="max-width: 600px;">
+        <thead class="table-light">
+            <tr>
+                <th>Key</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><kbd>Enter</kbd></td>
+                <td>Calculate result</td>
+            </tr>
+            <tr>
+                <td><kbd>Escape</kbd></td>
+                <td>Clear all inputs</td>
+            </tr>
+            <tr>
+                <td><kbd>+</kbd></td>
+                <td>Select Addition</td>
+            </tr>
+            <tr>
+                <td><kbd>-</kbd></td>
+                <td>Select Subtraction</td>
+            </tr>
+            <tr>
+                <td><kbd>*</kbd></td>
+                <td>Select Multiplication</td>
+            </tr>
+            <tr>
+                <td><kbd>/</kbd></td>
+                <td>Select Division</td>
+            </tr>
+            <tr>
+                <td><kbd>%</kbd></td>
+                <td>Select Modulo</td>
+            </tr>
+            <tr>
+                <td><kbd>^</kbd></td>
+                <td>Select Exponent</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<style>
+    kbd {
+        background-color: #f4f4f4;
+        border: 1px solid #ccc;
+        border-radius: 3px;
+        box-shadow: 0 1px 0 rgba(0, 0, 0, 0.2);
+        display: inline-block;
+        font-family: monospace;
+        font-size: 0.85em;
+        padding: 3px 8px;
+        margin: 0 2px;
+    }
+</style>
