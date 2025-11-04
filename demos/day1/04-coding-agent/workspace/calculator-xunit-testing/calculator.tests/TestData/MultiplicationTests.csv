@@ -1,0 +1,6 @@
+firstNumber,secondNumber,Operation,expectedValue,actualValue,result
+5,4,Multiply,20,,pass
+-5,4,Multiply,-20,,pass
+-5,-4,Multiply,20,,pass
+0,100,Multiply,0,,pass
+2.5,4,Multiply,10,,pass

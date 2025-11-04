@@ -1,0 +1,6 @@
+firstNumber,secondNumber,Operation,expectedValue,actualValue,result
+10,2,Divide,5,,pass
+-10,2,Divide,-5,,pass
+10,-2,Divide,-5,,pass
+-10,-2,Divide,5,,pass
+7.5,2.5,Divide,3,,pass

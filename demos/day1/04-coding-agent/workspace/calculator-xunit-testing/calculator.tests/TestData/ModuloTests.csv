@@ -1,0 +1,6 @@
+firstNumber,secondNumber,Operation,expectedValue,actualValue,result
+10,3,Modulo,1,,pass
+15,4,Modulo,3,,pass
+7,7,Modulo,0,,pass
+5,10,Modulo,5,,pass
+8.5,2.5,Modulo,1,,pass
