@@ -1,0 +1,284 @@
+@page "/calculator"
+@using calculator.web.Services
+@inject ICalculatorService CalculatorService
+@inject ICalculationHistoryService HistoryService
+@inject ILogger<Calculator> Logger
+@inject NavigationManager NavigationManager
+@implements IDisposable
+
+<PageTitle>Calculator</PageTitle>
+
+<h1>Blazor Calculator</h1>
+
+<div class="row">
+    <div class="col-lg-5 col-md-6 mb-4">
+        <div class="calculator-keypad">
+            <!-- Display -->
+            <div class="calculator-display">
+                @if (!string.IsNullOrEmpty(errorMessage))
+                {
+                    <div class="display-error">@errorMessage</div>
+                }
+                else
+                {
+                    <div class="display-expression">@GetDisplayExpression()</div>
+                    <div class="display-value">@displayValue</div>
+                }
+            </div>
+
+            <!-- Keypad -->
+            <div class="keypad">
+                <!-- Row 1: Clear and Operations -->
+                <button class="btn-keypad btn-clear" @onclick="Clear">C</button>
+                <button class="btn-keypad btn-operator" @onclick="@(() => HandleOperator("/"))">÷</button>
+                <button class="btn-keypad btn-operator" @onclick="@(() => HandleOperator("*"))">×</button>
+                <button class="btn-keypad btn-operator" @onclick="@(() => HandleOperator("%"))">%</button>
+
+                <!-- Row 2: Numbers 7-9 and Minus -->
+                <button class="btn-keypad btn-number" @onclick="@(() => AppendDigit("7"))">7</button>
+                <button class="btn-keypad btn-number" @onclick="@(() => AppendDigit("8"))">8</button>
+                <button class="btn-keypad btn-number" @onclick="@(() => AppendDigit("9"))">9</button>
+                <button class="btn-keypad btn-operator" @onclick="@(() => HandleOperator("-"))">−</button>
+
+                <!-- Row 3: Numbers 4-6 and Plus -->
+                <button class="btn-keypad btn-number" @onclick="@(() => AppendDigit("4"))">4</button>
+                <button class="btn-keypad btn-number" @onclick="@(() => AppendDigit("5"))">5</button>
+                <button class="btn-keypad btn-number" @onclick="@(() => AppendDigit("6"))">6</button>
+                <button class="btn-keypad btn-operator" @onclick="@(() => HandleOperator("+"))">+</button>
+
+                <!-- Row 4: Numbers 1-3 and Power -->
+                <button class="btn-keypad btn-number" @onclick="@(() => AppendDigit("1"))">1</button>
+                <button class="btn-keypad btn-number" @onclick="@(() => AppendDigit("2"))">2</button>
+                <button class="btn-keypad btn-number" @onclick="@(() => AppendDigit("3"))">3</button>
+                <button class="btn-keypad btn-operator" @onclick="@(() => HandleOperator("^"))">x<sup>y</sup></button>
+
+                <!-- Row 5: Zero, Decimal, and Equals -->
+                <button class="btn-keypad btn-number btn-zero" @onclick="@(() => AppendDigit("0"))">0</button>
+                <button class="btn-keypad btn-number" @onclick="AppendDecimal">.</button>
+                <button class="btn-keypad btn-equals" @onclick="Calculate">=</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-7 col-md-6">
+        <div class="history-container">
+            <h3>Calculation History</h3>
+            
+            @if (HistoryService.Count > 0)
+            {
+                <div class="mb-3">
+                    <button class="btn btn-sm btn-outline-secondary" @onclick="ClearHistory">
+                        Clear History
+                    </button>
+                    <span class="ms-2 text-muted">(@HistoryService.Count entries)</span>
+                </div>
+                
+                <div class="table-responsive">
+                    <table class="table table-sm table-striped">
+                        <thead>
+                            <tr>
+                                <th>Time</th>
+                                <th>Calculation</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var entry in HistoryService.GetHistory())
+                            {
+                                <tr @key="entry.Timestamp">
+                                    <td>@entry.Timestamp.ToString("HH:mm:ss")</td>
+                                    <td>@entry.Display</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <p class="text-muted">No calculations yet. Start calculating to build your history.</p>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    private string displayValue = "0";
+    private string currentInput = "";
+    private double? firstOperand = null;
+    private string? selectedOperator = null;
+    private bool shouldResetDisplay = false;
+    private string errorMessage = string.Empty;
+
+    protected override void OnInitialized()
+    {
+        // Subscribe to history changes
+        HistoryService.HistoryChanged += OnHistoryChanged;
+        Logger.LogInformation("Calculator component initialized at {Time}", DateTime.UtcNow);
+    }
+
+    private void OnHistoryChanged(object? sender, EventArgs e)
+    {
+        // Refresh UI when history changes
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void AppendDigit(string digit)
+    {
+        errorMessage = string.Empty;
+
+        if (shouldResetDisplay)
+        {
+            currentInput = digit;
+            shouldResetDisplay = false;
+        }
+        else
+        {
+            if (currentInput == "0")
+                currentInput = digit;
+            else
+                currentInput += digit;
+        }
+
+        displayValue = currentInput;
+    }
+
+    private void AppendDecimal()
+    {
+        errorMessage = string.Empty;
+
+        if (shouldResetDisplay)
+        {
+            currentInput = "0.";
+            shouldResetDisplay = false;
+        }
+        else if (!currentInput.Contains("."))
+        {
+            if (string.IsNullOrEmpty(currentInput))
+                currentInput = "0.";
+            else
+                currentInput += ".";
+        }
+
+        displayValue = currentInput;
+    }
+
+    private void HandleOperator(string operatorSymbol)
+    {
+        errorMessage = string.Empty;
+
+        if (!string.IsNullOrEmpty(currentInput) && double.TryParse(currentInput, out double value))
+        {
+            if (firstOperand.HasValue && !shouldResetDisplay && selectedOperator != null)
+            {
+                // Complete the previous operation
+                Calculate();
+            }
+            else
+            {
+                firstOperand = value;
+            }
+
+            selectedOperator = operatorSymbol;
+            shouldResetDisplay = true;
+        }
+        else if (firstOperand.HasValue)
+        {
+            // Just change the operator
+            selectedOperator = operatorSymbol;
+        }
+    }
+
+    private void Calculate()
+    {
+        errorMessage = string.Empty;
+
+        if (!firstOperand.HasValue || selectedOperator == null)
+            return;
+
+        if (!double.TryParse(currentInput, out double secondOperandValue))
+            return;
+
+        try
+        {
+            Logger.LogInformation("Calculating: {First} {Operator} {Second}", 
+                firstOperand.Value, selectedOperator, secondOperandValue);
+
+            double result = selectedOperator switch
+            {
+                "+" => CalculatorService.Add(firstOperand.Value, secondOperandValue),
+                "-" => CalculatorService.Subtract(firstOperand.Value, secondOperandValue),
+                "*" => CalculatorService.Multiply(firstOperand.Value, secondOperandValue),
+                "/" => CalculatorService.Divide(firstOperand.Value, secondOperandValue),
+                "%" => CalculatorService.Modulo(firstOperand.Value, secondOperandValue),
+                "^" => CalculatorService.Exponent(firstOperand.Value, secondOperandValue),
+                _ => throw new InvalidOperationException($"Unknown operator: {selectedOperator}")
+            };
+
+            // Add to history
+            HistoryService.AddEntry(firstOperand.Value, secondOperandValue, selectedOperator, result);
+            
+            Logger.LogInformation("Calculation successful: {Result}", result);
+
+            // Update display and prepare for next operation
+            displayValue = result.ToString();
+            currentInput = result.ToString();
+            firstOperand = result;
+            selectedOperator = null;
+            shouldResetDisplay = true;
+        }
+        catch (DivideByZeroException)
+        {
+            errorMessage = "Cannot divide by zero";
+            Logger.LogWarning("Division by zero attempted: {First} {Operator} {Second}", 
+                firstOperand.Value, selectedOperator, secondOperandValue);
+            Clear();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error: {ex.Message}";
+            Logger.LogError(ex, "Error during calculation: {First} {Operator} {Second}", 
+                firstOperand.Value, selectedOperator, secondOperandValue);
+            Clear();
+        }
+    }
+
+    private void Clear()
+    {
+        displayValue = "0";
+        currentInput = "";
+        firstOperand = null;
+        selectedOperator = null;
+        shouldResetDisplay = false;
+        errorMessage = string.Empty;
+        Logger.LogInformation("Calculator cleared");
+    }
+
+    private string GetDisplayExpression()
+    {
+        if (firstOperand.HasValue && selectedOperator != null)
+        {
+            string operatorDisplay = selectedOperator switch
+            {
+                "/" => "÷",
+                "*" => "×",
+                "-" => "−",
+                _ => selectedOperator
+            };
+            return $"{firstOperand.Value} {operatorDisplay}";
+        }
+        return "";
+    }
+
+    private void ClearHistory()
+    {
+        HistoryService.ClearHistory();
+        Logger.LogInformation("Calculation history cleared");
+    }
+
+    public void Dispose()
+    {
+        // Unsubscribe from events
+        HistoryService.HistoryChanged -= OnHistoryChanged;
+        Logger.LogInformation("Calculator component disposed");
+    }
+}
