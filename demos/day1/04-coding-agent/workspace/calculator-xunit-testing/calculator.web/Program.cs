@@ -21,6 +21,12 @@ else
     builder.Logging.SetMinimumLevel(LogLevel.Warning);
 }
 
+// Add Application Insights telemetry
+builder.Services.AddApplicationInsightsTelemetry();
+
+// Add health checks
+builder.Services.AddHealthChecks();
+
 // Add services to the container.
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor(options =>
@@ -72,6 +78,9 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
+
+// Map health check endpoint
+app.MapHealthChecks("/health");
 
 app.MapBlazorHub();
 app.MapFallbackToPage("/_Host");
