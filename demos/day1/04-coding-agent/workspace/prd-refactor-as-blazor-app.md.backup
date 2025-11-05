@@ -53,12 +53,11 @@ The current console calculator application demonstrates excellent .NET practices
 - Modifications to the existing console application
 - Changes to the `CalculatorOperations` class or test suite
 - Authentication or user management
-- Calculation history persistence to database (in-memory only for this version)
+- Calculation history persistence (database integration)
 - Deployment to production environments
-- Mobile-specific UI optimizations beyond responsive design
+- Mobile-specific UI optimizations
 - Advanced calculator features beyond the six existing operations
 - API endpoints or REST services
-- Export/import of calculation history
 
 ## 1.6 User Stories / Use Cases
 
