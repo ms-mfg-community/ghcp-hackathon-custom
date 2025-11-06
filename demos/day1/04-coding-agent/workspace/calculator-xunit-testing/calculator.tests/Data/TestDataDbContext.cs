@@ -259,6 +259,63 @@ public class TestDataDbContext : DbContext
                 Operation = "Multiply",
                 ExpectedResult = 0.000001,
                 Description = "Multiplying very small decimals"
+            },
+
+            // Additional decimal test cases
+            new CalculatorTestCase
+            {
+                Id = 22,
+                TestName = "Subtract_Decimals",
+                Category = "Subtraction",
+                FirstOperand = 5.8,
+                SecondOperand = 2.3,
+                Operation = "Subtract",
+                ExpectedResult = 3.5,
+                Description = "Subtracting decimal numbers"
+            },
+            new CalculatorTestCase
+            {
+                Id = 23,
+                TestName = "Multiply_Decimals",
+                Category = "Multiplication",
+                FirstOperand = 3.5,
+                SecondOperand = 2.0,
+                Operation = "Multiply",
+                ExpectedResult = 7.0,
+                Description = "Multiplying decimal numbers"
+            },
+            new CalculatorTestCase
+            {
+                Id = 24,
+                TestName = "Divide_Decimals",
+                Category = "Division",
+                FirstOperand = 7.5,
+                SecondOperand = 2.5,
+                Operation = "Divide",
+                ExpectedResult = 3.0,
+                Description = "Dividing decimal numbers"
+            },
+            new CalculatorTestCase
+            {
+                Id = 25,
+                TestName = "Add_MixedIntegerDecimal",
+                Category = "Addition",
+                FirstOperand = 5.0,
+                SecondOperand = 3.7,
+                Operation = "Add",
+                ExpectedResult = 8.7,
+                Description = "Adding integer and decimal"
+            },
+            new CalculatorTestCase
+            {
+                Id = 26,
+                TestName = "Multiply_DecimalByInteger",
+                Category = "Multiplication",
+                FirstOperand = 4.5,
+                SecondOperand = 3.0,
+                Operation = "Multiply",
+                ExpectedResult = 13.5,
+                Description = "Multiplying decimal by integer"
             }
         );
     }

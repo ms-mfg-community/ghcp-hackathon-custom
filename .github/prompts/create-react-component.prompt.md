@@ -1,5 +1,5 @@
 ---
-mode: 'agent'
+agent: 'agent'
 model: 'Claude Sonnet 4.5'
 tools: ['githubRepo', 'search/codebase']
 description: 'Generate a new React form component'
