@@ -131,7 +131,7 @@ public class CalculatorTestCase
 
 **Categories:** Addition, Subtraction, Multiplication, Division, EdgeCases
 
-**Operations:** Add, Subtract, Multiply, Divide
+**Operations:** Add, Subtract, Multiply, Divide, Modulo, Exponent
 
 **Current Record Count:** 26 seeded test cases
 
@@ -692,7 +692,7 @@ private void ValidateTestCase(CalculatorTestCase testCase)
     if (string.IsNullOrWhiteSpace(testCase.Operation))
         throw new ValidationException("Operation is required");
 
-    var validOperations = new[] { "Add", "Subtract", "Multiply", "Divide" };
+    var validOperations = new[] { "Add", "Subtract", "Multiply", "Divide", "Modulo", "Exponent" };
     if (!validOperations.Contains(testCase.Operation))
         throw new ValidationException($"Operation must be one of: {string.Join(", ", validOperations)}");
 

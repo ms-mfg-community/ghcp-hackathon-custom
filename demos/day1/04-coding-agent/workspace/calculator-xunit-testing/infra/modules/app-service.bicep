@@ -8,7 +8,7 @@ param applicationInsightsConnectionString string
 param logAnalyticsWorkspaceId string
 param storageAccountName string
 
-// App Service Plan - B1 tier per PRD
+// App Service Plan - B1 tier
 resource appServicePlan 'Microsoft.Web/serverfarms@2023-01-01' = {
   name: '${abbrs.webServerFarms}${environmentName}-${resourceToken}'
   location: location

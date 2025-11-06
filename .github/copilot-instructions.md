@@ -423,6 +423,16 @@ pip list --outdated              # Check for updates
 
 - For Java apps, use maven for build automation, dependency management, project structure standardization, plugins and extensibility and project information management unless otherwise specified in prompts.
 
+### SQL Databases
+
+- For SQLite databases, use the `sqlite3` utility for performing CRUD operations (Create, Read, Update, Delete).
+- Access SQLite databases via command line: `sqlite3 database_name.db`
+- Use `.help` within sqlite3 shell to view available commands
+- Use `.schema` to view table structures
+- Use `.tables` to list all tables in the database
+- Execute SQL commands directly in the sqlite3 shell or via script files using `sqlite3 database_name.db < script.sql`
+- For production applications, use appropriate database libraries/drivers for your programming language instead of direct sqlite3 CLI
+
 ### Docker
 
 Docker is the preferred containerization platform for packaging, deploying, and running applications in isolated environments. Follow these best practices for Dockerfile creation, image optimization, and container management.

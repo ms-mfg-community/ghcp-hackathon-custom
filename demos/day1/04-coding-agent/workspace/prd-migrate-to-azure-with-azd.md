@@ -33,7 +33,7 @@ The Blazor calculator application currently runs only in local development envir
 
 - Azure Developer CLI (azd) project initialization and configuration
 - Bicep infrastructure modules for all Azure resources
-- Azure App Service deployment (B1 tier, East US 2 region)
+- Azure App Service deployment (F1 tier, East US 2 region)
 - Azure SQL Server and Database (Basic tier) - infrastructure only
 - Azure Key Vault with RBAC and managed identity integration
 - Application Insights and Log Analytics workspace with 30-day retention
@@ -84,7 +84,7 @@ The Blazor calculator application currently runs only in local development envir
 |---|---|
 | FR-1 | The solution shall initialize an azd project with azure.yaml defining the calculator-web service |
 | FR-2 | The solution shall create a main.bicep file orchestrating all Azure resource deployments |
-| FR-3 | The solution shall deploy Azure App Service Plan with B1 tier and AlwaysOn enabled |
+| FR-3 | The solution shall deploy Azure App Service Plan with F1 tier (AlwaysOn not available in Free tier) |
 | FR-4 | The solution shall deploy Azure App Service with .NET 9.0 Linux runtime stack |
 | FR-5 | The solution shall enable managed identity on App Service for Key Vault and Storage access |
 | FR-6 | The solution shall deploy Azure SQL Server with Entra ID admin authentication |
@@ -118,8 +118,8 @@ The Blazor calculator application currently runs only in local development envir
 
 ### Scalability
 
-- App Service B1 tier supports vertical scaling to higher tiers without redeployment
-- Architecture supports future migration to scale-out with multiple instances
+- App Service F1 tier supports vertical scaling to higher tiers without redeployment
+- Architecture supports future migration to scale-out with multiple instances (not available in Free tier)
 
 ### Security
 
@@ -157,7 +157,7 @@ The Blazor calculator application currently runs only in local development envir
 
 ```
 Resource Group: rg-calculator-eastus2
-├── App Service Plan (plan-calculator-eastus2) - B1 tier
+├── App Service Plan (plan-calculator-eastus2) - F1 tier
 ├── App Service (app-calculator-eastus2) - .NET 9.0 Linux
 │   └── Managed Identity (system-assigned)
 ├── SQL Server (sql-calculator-eastus2)
@@ -329,7 +329,7 @@ infra/
 
 ### Assumptions
 
-- Azure subscription has quota for B1 App Service in East US 2
+- Azure subscription has quota for F1 App Service in East US 2
 - User has Owner or Contributor role on subscription dee9fea3-65b6-45ad-8b44-f38b05c31fa9
 - GitHub repository ms-mfg-community/ghcp-hackathon-custom has Actions enabled
 - Microsoft Playwright Testing preview available in East US 2 region
@@ -352,7 +352,7 @@ infra/
 | Risk | Impact | Likelihood | Mitigation |
 |---|---|---|---|
 | Playwright Testing preview not available in East US 2 | High | Low | Deploy Playwright workspace to nearest region (East US) or use alternative testing approach |
-| App Service B1 tier insufficient for production load | Medium | Medium | Monitor performance metrics; upgrade to S1 tier if needed |
+| App Service F1 tier insufficient for production load | High | High | Monitor performance metrics; upgrade to B1 or S1 tier when needed. F1 has limited CPU/memory and no AlwaysOn support |
 | SQL Database Basic tier too small for future migration | Medium | Low | Basic tier sufficient for initial migration; plan upgrade to Standard tier when migrating history |
 | GitHub Actions minutes quota exceeded | Low | Low | Use self-hosted runners or optimize workflow frequency |
 | Managed identity permissions not propagating | Medium | Low | Add retry logic and verify RBAC assignments in Bicep |
@@ -361,7 +361,7 @@ infra/
 
 ## Open Questions
 
-1. **Staging Environment**: Should we deploy a separate staging environment or use deployment slots on the B1 tier? (B1 does not support slots)
+1. **Staging Environment**: Should we deploy a separate staging environment or use deployment slots? (F1 tier does not support deployment slots)
 2. **SQL Database Backup**: What backup retention policy should be configured for the SQL Database?
 3. **Application Insights Sampling**: Should we implement telemetry sampling to reduce costs?
 4. **Custom Domain**: Will a custom domain be configured post-deployment?
