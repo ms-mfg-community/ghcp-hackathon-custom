@@ -13,7 +13,6 @@ resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2022-10
     sku: {
       name: 'PerGB2018'
     }
-    retentionInDays: 30
     features: {
       enableLogAccessUsingOnlyResourcePermissions: true
     }

@@ -1,0 +1,21 @@
+{
+  "name": "calculator-xunit-testing",
+  "version": "1.0.0",
+  "description": "A comprehensive .NET 8 console calculator application with full xUnit testing suite, demonstrating best practices in C# development, testable code design, and comprehensive error handling.",
+  "main": "index.js",
+  "scripts": {
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "test:debug": "playwright test --debug",
+    "test:report": "playwright show-report",
+    "test:chromium": "playwright test --project=chromium",
+    "test:firefox": "playwright test --project=firefox",
+    "test:webkit": "playwright test --project=webkit"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@playwright/test": "^1.56.1"
+  }
+}

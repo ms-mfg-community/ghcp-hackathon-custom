@@ -8,12 +8,16 @@ param sqlAdminLogin string
 @secure()
 param sqlAdminPassword string
 param keyVaultName string
+param storageAccountName string
 
-// SQL Server
+// SQL Server with Microsoft Defender for SQL enabled (policy compliance)
 resource sqlServer 'Microsoft.Sql/servers@2023-05-01-preview' = {
   name: '${abbrs.sqlServers}${environmentName}-${resourceToken}'
   location: location
-  tags: tags
+  tags: union(tags, {
+    'ms-resource-usage': 'azure-cloud-shell'
+    'SkipASMAzSecPack': 'true'
+  })
   properties: {
     administratorLogin: sqlAdminLogin
     administratorLoginPassword: sqlAdminPassword
@@ -21,6 +25,38 @@ resource sqlServer 'Microsoft.Sql/servers@2023-05-01-preview' = {
     minimalTlsVersion: '1.2'
     publicNetworkAccess: 'Enabled'
   }
+}
+
+// Enable Microsoft Defender for SQL (policy requirement)
+resource sqlServerSecurityAlertPolicy 'Microsoft.Sql/servers/securityAlertPolicies@2023-05-01-preview' = {
+  parent: sqlServer
+  name: 'Default'
+  properties: {
+    state: 'Enabled'
+    emailAccountAdmins: false
+  }
+}
+
+// Enable Vulnerability Assessment
+resource sqlServerVulnerabilityAssessment 'Microsoft.Sql/servers/vulnerabilityAssessments@2023-05-01-preview' = {
+  parent: sqlServer
+  name: 'default'
+  properties: {
+    storageContainerPath: '${storageAccount.properties.primaryEndpoints.blob}vulnerability-assessment'
+    recurringScans: {
+      isEnabled: true
+      emailSubscriptionAdmins: false
+    }
+  }
+  dependsOn: [
+    sqlServerSecurityAlertPolicy
+  ]
+}
+
+// Reference to storage account for vulnerability assessment
+resource storageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' existing = {
+  name: storageAccountName
+  scope: resourceGroup()
 }
 
 // Allow Azure services to access SQL Server

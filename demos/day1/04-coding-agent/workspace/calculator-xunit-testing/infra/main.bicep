@@ -16,10 +16,10 @@ param principalId string = ''
 param tags object = {}
 
 @description('Tenant ID for Azure resources')
-param tenantId string = '54d665dd-30f1-45c5-a8d5-d6ffcdb518f9'
+param tenantId string
 
 @description('Subscription ID for Azure resources')
-param subscriptionId string = 'dee9fea3-65b6-45ad-8b44-f38b05c31fa9'
+param subscriptionId string
 
 @description('SQL Server administrator login')
 @secure()
@@ -73,6 +73,19 @@ module keyVault './modules/keyvault.bicep' = {
   }
 }
 
+// Deploy Storage Account
+module storage './modules/storage.bicep' = {
+  name: 'storage'
+  scope: rg
+  params: {
+    location: location
+    environmentName: environmentName
+    resourceToken: resourceToken
+    abbrs: abbrs
+    tags: tags
+  }
+}
+
 // Deploy SQL Server and Database
 module sql './modules/sql.bicep' = {
   name: 'sql'
@@ -86,20 +99,11 @@ module sql './modules/sql.bicep' = {
     sqlAdminLogin: sqlAdminLogin
     sqlAdminPassword: sqlAdminPassword
     keyVaultName: keyVault.outputs.keyVaultName
+    storageAccountName: storage.outputs.storageAccountName
   }
-}
-
-// Deploy Storage Account
-module storage './modules/storage.bicep' = {
-  name: 'storage'
-  scope: rg
-  params: {
-    location: location
-    environmentName: environmentName
-    resourceToken: resourceToken
-    abbrs: abbrs
-    tags: tags
-  }
+  dependsOn: [
+    storage
+  ]
 }
 
 // Deploy Playwright Testing Workspace
