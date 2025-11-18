@@ -1,6 +1,0 @@
-firstNumber,secondNumber,Operation,expectedValue,actualValue,result
-10,5,Add,15,,pass
--5,3,Add,-2,,pass
-0,0,Add,0,,pass
--10,-20,Add,-30,,pass
-2.5,3.7,Add,6.2,,pass

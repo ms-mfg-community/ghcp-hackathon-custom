@@ -16,7 +16,7 @@ param principalId string = ''
 param tags object = {}
 
 @description('Tenant ID for Azure resources')
-param tenantId string
+// param tenantId string
 
 @description('Subscription ID for Azure resources')
 param subscriptionId string
